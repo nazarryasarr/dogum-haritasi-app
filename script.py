@@ -5,7 +5,14 @@ import math
 from geopy.geocoders import Nominatim
 import matplotlib.pyplot as plt
 import numpy as np
-
+import math
+from datetime import date, datetime, time
+from typing import Optional
+import ephem
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from geopy.geocoders import Nominatim
+from pydantic import BaseModel, Field
 
 st.set_page_config(page_title="Doğum Haritası & Analiz",page_icon="⚝", layout="centered")
 st.title("⚝ Doğum Haritası, Evler  & Kişilik Analizi")

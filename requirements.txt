@@ -1,5 +1,4 @@
-streamlit
+fastapi
+uvicorn[standard]
+pydantic
 ephem
-geopy
-matplotlib
-numpy
