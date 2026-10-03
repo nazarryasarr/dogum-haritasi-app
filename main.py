@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from geopy.geocoders import Nominatim
 
 app= FastAPI(
-    tittle= "Astroloji Doğum Haritası API",
+    title= "Astroloji Doğum Haritası API",
     description= "Kullanıcı doğum bilgilerini alarak gezegen konumlarını, yükseleni ve burç analizlerini hesaplayan servis",
     version= "1.0.0",
 )
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ZODİAC_SİGNS=[
+ZODIAC_SİGNS=[
     "Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak",
     "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"
 ]
@@ -30,7 +30,7 @@ ZODİAC_SİGNS=[
 DETAILED_INTERPRETATIONS={
     "Koç": {
         "element":"ATeş (Öncü)",
-        "yönetici": "Mars",
+        "yonetici": "Mars",
         "özet": " Zodyak'ın ilk burcu olan Koç; saf yaşam enerjisini, cesareti, öncülüğü ve bağımsızlığı simgeler. Hayata 'Ben varım' diyerek başlar ve zorluklar karşısında yılmadan mücadele eder.",
         "guclu_yonler": "Yüksek motivasyon, kriz anlarında hızlı inisiyatif alma, dürüstlük, cesaret ve engelleri aşma azmi.",
         "golge_yonler": "Sabırsızlık, çabuk öfkelenme, başladığı işi bitirmekte zorlanma ve düşünmeden fevri kararlar alma eğilimi.",
@@ -130,20 +130,20 @@ def deg_to_zodiac(degrees: float):
     degrees= degrees % 360
     sign_idx= int( degrees//30)
     sign_deg= degrees%30
-    return ZODİAC_SİGNS[sign_idx], round(sign_deg,2)
+    return ZODIAC_SIGNS[sign_idx], round(sign_deg,2)
 
 class BirthChartRequest(BaseModel):
     birth_date: str= Field(
         ...,
-        dedscription= "Doğum tarihi (Gün.Ay.Yıl ÖRN:15.05.2000)",
-        EXAMPLE="15.05.2000",
+        description= "Doğum tarihi (Gün.Ay.Yıl ÖRN:15.05.2000)",
+        examples="15.05.2000",
 
     )
 
-    birth_time: time = Field(default= time(12,0), exampple="14:30:00")
-    city: Optional[str]= Field(default=None, example="Mersin.Türkiye")
-    latitude: Optional[float]= Field(default=None, exapmle=36.80)
-    longitude: Optional[float]= Field(default=None, example=34.63)
+    birth_time: time = Field(default= time(12,0), examples="14:30:00")
+    city: Optional[str]= Field(default=None, examples="Mersin.Türkiye")
+    latitude: Optional[float]= Field(default=None, examples=36.80)
+    longitude: Optional[float]= Field(default=None, examples=34.63)
 
     @field_validator("birth_date")
     @classmethod
@@ -160,7 +160,7 @@ class BirthChartRequest(BaseModel):
 
         if not parsed_date:
             raise ValueError(
-                "Ge.ersiz tarih formatı! Lütfen 'GG.AA.YYYY' şeklinde geçerli bir gün, ay, yıl girin."
+                "Geçersiz tarih formatı! Lütfen 'GG.AA.YYYY' şeklinde geçerli bir gün, ay, yıl girin."
 
             )
         min_date= date(1900,1,1)
@@ -242,15 +242,12 @@ def calculate_birth_chart(payload: BirthChartRequest):
             }
         )
 
-    sidereal_time= obs.sidereal_time()
-    lat_rad= float(obs.lat)
+    sidereal_time= float(obs.sidereal_time())
+    lat_rad= math.radians(float(obs.lat))
     eps= math.radians(23.4392911)
-
-    asc_rad= math.atan2(
-        math.cos(sidereal_time),
-        -math.sin(sidereal_time)* math.cos(eps)
-        -math.tan(lat_rad)* math.sin(eps),
-    )
+    y = -math.cos(sidereal_time)
+    x = math.sin(sidereal_time) * math.cos(eps) + math.tan(lat_rad) * math.sin(eps)
+    asc_rad = math.atan2(y, x)
 
     asc_deg= (math.degrees(asc_rad)+360)%360
     asc_sign, asc_deg_in_sign= deg_to_zodiac(asc_deg)
@@ -260,7 +257,7 @@ def calculate_birth_chart(payload: BirthChartRequest):
     return{
         "input_summary":{
             "birth_date": payload.birth_date,
-            "bith_time": str(payload.birth_time),
+            "birth_time": str(payload.birth_time),
             "location_used":{
                 "city": payload.city,
                 "latitude": round(lat,4),
